@@ -1,43 +1,89 @@
 (() => {
   "use strict";
 
-  const stage = document.getElementById("photoStage");
-  const canvas = document.getElementById("preview");
-  const ctx = canvas.getContext("2d");
-  const fileInput = document.getElementById("fileInput");
-  const uploadButton = document.getElementById("uploadButton");
-  const replaceButton = document.getElementById("replaceButton");
-  const placeholder = document.getElementById("placeholder");
-  const photoInfo = document.getElementById("photoInfo");
-  const liveBadge = document.getElementById("liveBadge");
-  const zoomInput = document.getElementById("zoom");
-  const zoomReadout = document.getElementById("zoomReadout");
-  const exportButton = document.getElementById("exportButton");
-  const exportNote = document.getElementById("exportNote");
-  const errorMessage = document.getElementById("errorMessage");
+  function getElement<T extends HTMLElement>(id: string): T {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Missing required element: ${id}`);
+    return element as T;
+  }
+
+  function getChildElement<T extends HTMLElement>(
+    parent: HTMLElement,
+    selector: string,
+  ): T {
+    const element = parent.querySelector<T>(selector);
+    if (!element) throw new Error(`Missing required child element: ${selector}`);
+    return element;
+  }
+
+  function getCanvasContext(canvasElement: HTMLCanvasElement): CanvasRenderingContext2D {
+    const context = canvasElement.getContext("2d");
+    if (!context) throw new Error("Could not initialize the preview canvas.");
+    return context;
+  }
+
+  const stage = getElement<HTMLDivElement>("photoStage");
+  const canvas = getElement<HTMLCanvasElement>("preview");
+  const ctx = getCanvasContext(canvas);
+  const fileInput = getElement<HTMLInputElement>("fileInput");
+  const uploadButton = getElement<HTMLButtonElement>("uploadButton");
+  const replaceButton = getElement<HTMLButtonElement>("replaceButton");
+  const placeholder = getElement<HTMLElement>("placeholder");
+  const photoInfo = getElement<HTMLElement>("photoInfo");
+  const liveBadge = getElement<HTMLElement>("liveBadge");
+  const zoomInput = getElement<HTMLInputElement>("zoom");
+  const zoomReadout = getElement<HTMLElement>("zoomReadout");
+  const exportButton = getElement<HTMLButtonElement>("exportButton");
+  const exportButtonLabel =
+    getChildElement<HTMLSpanElement>(exportButton, "span");
+  const exportNote = getElement<HTMLElement>("exportNote");
+  const errorMessage = getElement<HTMLElement>("errorMessage");
 
   const GIF_WIDTH = 160;
   const FRAME_COUNT = 16;
   const FRAME_DELAY = 8;
+  const backgrounds = [
+    "#f2eee6",
+    "#dce8df",
+    "#dfe7f1",
+    "#efdfe1",
+    "#e6e1f1",
+    "transparent",
+  ] as const;
+  type AnimationStyle = "breathe" | "float" | "glow";
+  type Shape = "circle" | "square";
+  type Background = (typeof backgrounds)[number];
   const styles = {
     breathe: "Soft breathe",
     float: "Little float",
     glow: "Warm glow",
-  };
+  } satisfies Record<AnimationStyle, string>;
 
-  let photo = null;
-  let photoUrl = null;
+  function isAnimationStyle(value: string | undefined): value is AnimationStyle {
+    return value === "breathe" || value === "float" || value === "glow";
+  }
+
+  function isShape(value: string | undefined): value is Shape {
+    return value === "circle" || value === "square";
+  }
+
+  function isBackground(value: string | undefined): value is Background {
+    return backgrounds.some((background) => background === value);
+  }
+
+  let photo: HTMLImageElement | null = null;
+  let photoUrl: string | null = null;
   let zoom = 1;
   let offsetX = 0;
   let offsetY = 0;
-  let animationStyle = "breathe";
-  let shape = "circle";
-  let background = "#f2eee6";
-  let dragPoint = null;
+  let animationStyle: AnimationStyle = "breathe";
+  let shape: Shape = "circle";
+  let background: Background = "#f2eee6";
+  let dragPoint: { x: number; y: number } | null = null;
   let lastFrameTime = 0;
   let frameNumber = 0;
 
-  function showError(message) {
+  function showError(message: string): void {
     errorMessage.textContent = message;
     errorMessage.hidden = false;
   }
@@ -47,7 +93,11 @@
     errorMessage.hidden = true;
   }
 
-  function drawImage(context, size, phase) {
+  function drawImage(
+    context: CanvasRenderingContext2D,
+    size: number,
+    phase: number,
+  ): void {
     if (!photo) return;
 
     const wave = Math.sin(phase * Math.PI * 2);
@@ -112,7 +162,7 @@
     context.restore();
   }
 
-  function animate(timestamp) {
+  function animate(timestamp: number): void {
     if (timestamp - lastFrameTime >= 45) {
       lastFrameTime = timestamp;
       frameNumber = (frameNumber + 1) % FRAME_COUNT;
@@ -135,7 +185,7 @@
     offsetY = Math.max(-maxY, Math.min(maxY, offsetY));
   }
 
-  function loadPhoto(file) {
+  function loadPhoto(file: File | undefined): void {
     clearError();
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -171,8 +221,8 @@
 
   uploadButton.addEventListener("click", () => fileInput.click());
   replaceButton.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", (event) => {
-    loadPhoto(event.target.files[0]);
+  fileInput.addEventListener("change", () => {
+    loadPhoto(fileInput.files?.[0]);
     fileInput.value = "";
   });
 
@@ -189,44 +239,62 @@
     }),
   );
   stage.addEventListener("drop", (event) =>
-    loadPhoto(event.dataTransfer.files[0]),
+    loadPhoto(event.dataTransfer?.files[0]),
   );
 
-  document.querySelectorAll("[data-style]").forEach((button) => {
-    button.addEventListener("click", () => {
-      animationStyle = button.dataset.style;
-      document.querySelectorAll("[data-style]").forEach((option) => {
-        const selected = option === button;
-        option.classList.toggle("selected", selected);
-        option.setAttribute("aria-pressed", String(selected));
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-style]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const selectedStyle = button.dataset.style;
+        if (!isAnimationStyle(selectedStyle)) return;
+        animationStyle = selectedStyle;
+        document
+          .querySelectorAll<HTMLButtonElement>("[data-style]")
+          .forEach((option) => {
+            const selected = option === button;
+            option.classList.toggle("selected", selected);
+            option.setAttribute("aria-pressed", String(selected));
+          });
+        drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
       });
-      drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
     });
-  });
 
-  document.querySelectorAll("[data-shape]").forEach((button) => {
-    button.addEventListener("click", () => {
-      shape = button.dataset.shape;
-      document.querySelectorAll("[data-shape]").forEach((option) => {
-        const selected = option === button;
-        option.classList.toggle("selected", selected);
-        option.setAttribute("aria-pressed", String(selected));
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-shape]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const selectedShape = button.dataset.shape;
+        if (!isShape(selectedShape)) return;
+        shape = selectedShape;
+        document
+          .querySelectorAll<HTMLButtonElement>("[data-shape]")
+          .forEach((option) => {
+            const selected = option === button;
+            option.classList.toggle("selected", selected);
+            option.setAttribute("aria-pressed", String(selected));
+          });
+        drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
       });
-      drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
     });
-  });
 
-  document.querySelectorAll("[data-color]").forEach((button) => {
-    button.addEventListener("click", () => {
-      background = button.dataset.color;
-      document.querySelectorAll("[data-color]").forEach((option) => {
-        const selected = option === button;
-        option.classList.toggle("selected", selected);
-        option.setAttribute("aria-pressed", String(selected));
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-color]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const selectedBackground = button.dataset.color;
+        if (!isBackground(selectedBackground)) return;
+        background = selectedBackground;
+        document
+          .querySelectorAll<HTMLButtonElement>("[data-color]")
+          .forEach((option) => {
+            const selected = option === button;
+            option.classList.toggle("selected", selected);
+            option.setAttribute("aria-pressed", String(selected));
+          });
+        drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
       });
-      drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
     });
-  });
 
   zoomInput.addEventListener("input", () => {
     zoom = Number(zoomInput.value);
@@ -257,7 +325,7 @@
     dragPoint = null;
   });
 
-  function packCodes(codes) {
+  function packCodes(codes: readonly [number, number][]): number[] {
     const bytes = [];
     let accumulator = 0;
     let bitCount = 0;
@@ -274,13 +342,13 @@
     return bytes;
   }
 
-  function encodeLzw(indices) {
+  function encodeLzw(indices: Uint8Array): number[] {
     const clearCode = 256;
     const endCode = 257;
     let codeSize = 9;
     let nextCode = 258;
     let dictionary = new Map();
-    const codes = [[clearCode, codeSize]];
+    const codes: [number, number][] = [[clearCode, codeSize]];
 
     if (indices.length === 0) {
       codes.push([endCode, codeSize]);
@@ -313,14 +381,21 @@
     return packCodes(codes);
   }
 
-  function makeGif(frames, width, height, transparent) {
-    const bytes = [];
-    const writeByte = (value) => bytes.push(value & 255);
-    const writeWord = (value) => {
+  function makeGif(
+    frames: readonly Uint8ClampedArray[],
+    width: number,
+    height: number,
+    transparent: boolean,
+  ): Blob {
+    const bytes: number[] = [];
+    const writeByte = (value: number): void => {
+      bytes.push(value & 255);
+    };
+    const writeWord = (value: number): void => {
       writeByte(value);
       writeByte(value >> 8);
     };
-    const writeString = (value) => {
+    const writeString = (value: string): void => {
       for (let i = 0; i < value.length; i++) writeByte(value.charCodeAt(i));
     };
 
@@ -391,7 +466,7 @@
     return new Blob([new Uint8Array(bytes)], { type: "image/gif" });
   }
 
-  function packLzwSubBlocks(data) {
+  function packLzwSubBlocks(data: readonly number[]): number[] {
     const result = [];
     for (let start = 0; start < data.length; start += 255) {
       const length = Math.min(255, data.length - start);
@@ -401,7 +476,7 @@
     return result;
   }
 
-  function nextTask() {
+  function nextTask(): Promise<void> {
     return new Promise((resolve) => window.setTimeout(resolve, 0));
   }
 
@@ -409,7 +484,7 @@
     if (!photo) return;
     clearError();
     exportButton.disabled = true;
-    exportButton.querySelector("span").textContent = "Making your image…";
+    exportButtonLabel.textContent = "Making your image…";
     exportNote.textContent = "A little magic, just a moment";
     try {
       const frameCanvas = document.createElement("canvas");
@@ -418,6 +493,7 @@
       const frameContext = frameCanvas.getContext("2d", {
         willReadFrequently: true,
       });
+      if (!frameContext) throw new Error("Could not initialize the export canvas.");
       const frames = [];
       for (let frame = 0; frame < FRAME_COUNT; frame++) {
         drawImage(frameContext, GIF_WIDTH, frame / FRAME_COUNT);
@@ -448,7 +524,7 @@
       exportNote.textContent = "A looping GIF, ready to share";
     } finally {
       exportButton.disabled = false;
-      exportButton.querySelector("span").textContent = "Make my animated image";
+      exportButtonLabel.textContent = "Make my animated image";
     }
   }
   exportButton.addEventListener("click", exportGif);
