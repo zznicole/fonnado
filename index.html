@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f4f0" />
+    <title>fonnado — animated image maker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="fonnado home">
+        <span class="brand-icon" aria-hidden="true">f</span>
+        fonnado<span class="brand-period">.</span>
+      </a>
+      <span class="local-note"
+        ><span class="privacy-dot"></span> Your image stays on your device</span
+      >
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">A little fun gives inspiration</p>
+        <h1>Your image,<br /><span>with a little playful twist.</span></h1>
+        <p class="intro-copy">
+          Turn a favorite photo into a playful animated image. No account, no
+          uploads—just you.
+        </p>
+      </section>
+
+      <section class="studio" aria-label="Animated image studio">
+        <div class="photo-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="step-number">01</span>
+              <h2>Your image</h2>
+            </div>
+            <span class="panel-caption">Drag to reposition</span>
+          </div>
+
+          <div class="photo-stage" id="photoStage">
+            <div class="stage-placeholder" id="placeholder">
+              <span class="upload-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 15V4m0 0L8 8m4-4 4 4M5 14v4.5c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5V14"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <h3>Bring an image to life</h3>
+              <p>Drop an image here, or browse your device</p>
+              <button
+                type="button"
+                class="button button-dark"
+                id="uploadButton"
+              >
+                Choose an image <span aria-hidden="true">↗</span>
+              </button>
+              <span class="file-note"
+                >JPG, PNG or WebP · processed locally</span
+              >
+            </div>
+            <canvas
+              id="preview"
+              width="320"
+              height="320"
+              aria-label="Animated image preview. Drag to reposition."
+            ></canvas>
+            <span class="live-badge" id="liveBadge"
+              ><span></span> LIVE PREVIEW</span
+            >
+          </div>
+
+          <div class="photo-footer">
+            <span id="photoInfo">Your image will appear here</span>
+            <button type="button" class="text-button" id="replaceButton" hidden>
+              Replace image
+            </button>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" hidden />
+
+          <div class="adjustments">
+            <div class="adjustment-heading">
+              <label for="zoom">Image position</label>
+              <span>ZOOM <span id="zoomReadout">1.0×</span></span>
+            </div>
+            <input
+              id="zoom"
+              type="range"
+              min="1"
+              max="3"
+              step="0.01"
+              value="1"
+              aria-label="Zoom image"
+            />
+          </div>
+        </div>
+
+        <aside class="design-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="step-number">02</span>
+              <h2>Make it move</h2>
+            </div>
+            <span class="tiny-sparkle" aria-hidden="true">✳</span>
+          </div>
+
+          <div class="setting">
+            <span class="setting-label">Animation style</span>
+            <div class="style-list" role="group" aria-label="Animation style">
+              <button
+                type="button"
+                class="style-option selected"
+                data-style="breathe"
+                aria-pressed="true"
+              >
+                <span class="style-icon breathe-icon" aria-hidden="true"
+                  >◉</span
+                >
+                <span
+                  ><strong>Soft breathe</strong
+                  ><small>Gentle, easy-going motion</small></span
+                >
+                <span class="check" aria-hidden="true">✓</span>
+              </button>
+              <button
+                type="button"
+                class="style-option"
+                data-style="float"
+                aria-pressed="false"
+              >
+                <span class="style-icon float-icon" aria-hidden="true">✳</span>
+                <span
+                  ><strong>Little float</strong
+                  ><small>A subtle up-and-down bob</small></span
+                >
+                <span class="check" aria-hidden="true">✓</span>
+              </button>
+              <button
+                type="button"
+                class="style-option"
+                data-style="glow"
+                aria-pressed="false"
+              >
+                <span class="style-icon glow-icon" aria-hidden="true">✦</span>
+                <span
+                  ><strong>Warm glow</strong
+                  ><small>A soft, sunny shimmer</small></span
+                >
+                <span class="check" aria-hidden="true">✓</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="setting setting-inline">
+            <span class="setting-label">Image shape</span>
+            <div class="shape-picker" role="group" aria-label="Image shape">
+              <button
+                type="button"
+                class="shape-option selected"
+                data-shape="circle"
+                aria-pressed="true"
+              >
+                <span class="circle-symbol"></span>Circle
+              </button>
+              <button
+                type="button"
+                class="shape-option"
+                data-shape="square"
+                aria-pressed="false"
+              >
+                <span class="square-symbol"></span>Square
+              </button>
+            </div>
+          </div>
+
+          <div class="setting">
+            <span class="setting-label">Backdrop</span>
+            <div
+              class="color-picker"
+              role="group"
+              aria-label="Image background color"
+            >
+              <button
+                type="button"
+                class="color-option selected"
+                data-color="#f2eee6"
+                aria-label="Warm cream"
+                aria-pressed="true"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#dce8df"
+                aria-label="Soft sage"
+                aria-pressed="false"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#dfe7f1"
+                aria-label="Cloud blue"
+                aria-pressed="false"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#efdfe1"
+                aria-label="Blush"
+                aria-pressed="false"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="#e6e1f1"
+                aria-label="Lilac"
+                aria-pressed="false"
+              ></button>
+              <button
+                type="button"
+                class="color-option"
+                data-color="transparent"
+                aria-label="Transparent"
+                aria-pressed="false"
+              ></button>
+            </div>
+          </div>
+
+          <div class="export-area">
+            <button
+              type="button"
+              class="button export-button"
+              id="exportButton"
+              disabled
+            >
+              <span>Make my animated image</span>
+              <span class="export-arrow" aria-hidden="true">↗</span>
+            </button>
+            <p id="exportNote">A looping GIF, ready to share</p>
+            <p class="error-message" id="errorMessage" role="alert" hidden></p>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="page-footer">
+        <span>Made for your little corner of the internet</span
+        ><span>fonnado studio <span aria-hidden="true">✳</span></span>
+      </footer>
+    </main>
+  </body>
+</html>
