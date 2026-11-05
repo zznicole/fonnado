@@ -99,6 +99,9 @@ input[type="range"]::-moz-range-thumb { width: 9px; height: 9px; border: 2px sol
 .style-icon { display: grid; width: 29px; height: 29px; place-items: center; border-radius: 9px; background: #f4f0e9; color: #967f5c; font-size: 15px; }
 .float-icon { background: #edf2ef; color: #698776; }
 .glow-icon { background: #f7efeb; color: #cc8c67; }
+.sway-icon { background: #eef1f6; color: #7185a3; }
+.wiggle-icon { background: #f3eff6; color: #9279a1; }
+.pop-icon { background: #f8f2e7; color: #b28b4d; }
 .style-option strong, .style-option small { display: block; }
 .style-option strong { margin-bottom: 3px; font-size: 10px; font-weight: 700; }
 .style-option small { color: #8c8e85; font-size: 8px; }

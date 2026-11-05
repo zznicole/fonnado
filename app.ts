@@ -50,17 +50,27 @@
     "#e6e1f1",
     "transparent",
   ] as const;
-  type AnimationStyle = "breathe" | "float" | "glow";
+  type AnimationStyle = "breathe" | "float" | "glow" | "sway" | "wiggle" | "pop";
   type Shape = "circle" | "square";
   type Background = (typeof backgrounds)[number];
   const styles = {
     breathe: "Soft breathe",
     float: "Little float",
     glow: "Warm glow",
+    sway: "Gentle sway",
+    wiggle: "Playful wiggle",
+    pop: "Little pop",
   } satisfies Record<AnimationStyle, string>;
 
   function isAnimationStyle(value: string | undefined): value is AnimationStyle {
-    return value === "breathe" || value === "float" || value === "glow";
+    return (
+      value === "breathe" ||
+      value === "float" ||
+      value === "glow" ||
+      value === "sway" ||
+      value === "wiggle" ||
+      value === "pop"
+    );
   }
 
   function isShape(value: string | undefined): value is Shape {
@@ -103,6 +113,8 @@
     const wave = Math.sin(phase * Math.PI * 2);
     let motionScale = 1;
     let motionY = 0;
+    let motionX = 0;
+    let rotation = 0;
     let brightness = 1;
     let saturation = 1;
 
@@ -111,9 +123,17 @@
     } else if (animationStyle === "float") {
       motionY = wave * size * 0.025;
       motionScale = 1.025;
-    } else {
+    } else if (animationStyle === "glow") {
       brightness = 1.015 + (0.045 * (1 + wave)) / 2;
       saturation = 1.04 + (0.08 * (1 + wave)) / 2;
+    } else if (animationStyle === "sway") {
+      motionX = wave * size * 0.025;
+      motionScale = 1.04;
+    } else if (animationStyle === "wiggle") {
+      rotation = wave * 0.035;
+      motionScale = 1.08;
+    } else {
+      motionScale = 1 + (0.07 * (1 - Math.cos(phase * Math.PI * 2))) / 2;
     }
 
     context.clearRect(0, 0, size, size);
@@ -128,6 +148,11 @@
       context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
       context.clip();
     }
+    if (rotation !== 0) {
+      context.translate(size / 2, size / 2);
+      context.rotate(rotation);
+      context.translate(-size / 2, -size / 2);
+    }
 
     const scale =
       Math.max(size / photo.naturalWidth, size / photo.naturalHeight) *
@@ -135,7 +160,10 @@
       motionScale;
     const imageWidth = photo.naturalWidth * scale;
     const imageHeight = photo.naturalHeight * scale;
-    const x = (size - imageWidth) / 2 + (offsetX * size) / canvas.width;
+    const x =
+      (size - imageWidth) / 2 +
+      (offsetX * size) / canvas.width +
+      motionX;
     const y =
       (size - imageHeight) / 2 + (offsetY * size) / canvas.height + motionY;
 
