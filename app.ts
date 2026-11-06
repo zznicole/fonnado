@@ -133,7 +133,9 @@
       rotation = wave * 0.035;
       motionScale = 1.08;
     } else {
-      motionScale = 1 + (0.07 * (1 - Math.cos(phase * Math.PI * 2))) / 2;
+      const bounce = Math.max(0, Math.sin(phase * Math.PI * 4));
+      motionScale = 1 + 0.12 * bounce;
+      motionY = -size * 0.045 * bounce;
     }
 
     context.clearRect(0, 0, size, size);
