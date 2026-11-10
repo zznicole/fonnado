@@ -36,6 +36,10 @@
   const liveBadge = getElement<HTMLElement>("liveBadge");
   const zoomInput = getElement<HTMLInputElement>("zoom");
   const zoomReadout = getElement<HTMLElement>("zoomReadout");
+  const styleDropdown = getElement<HTMLDetailsElement>("styleDropdown");
+  const styleDropdownTrigger =
+    getElement<HTMLElement>("styleDropdownTrigger");
+  const styleSelection = getElement<HTMLElement>("styleSelection");
   const exportButton = getElement<HTMLButtonElement>("exportButton");
   const exportButtonLabel = getChildElement<HTMLSpanElement>(
     exportButton,
@@ -317,6 +321,7 @@
         const selectedStyle = button.dataset.style;
         if (!isAnimationStyle(selectedStyle)) return;
         animationStyle = selectedStyle;
+        styleSelection.textContent = styles[selectedStyle];
         document
           .querySelectorAll<HTMLButtonElement>("[data-style]")
           .forEach((option) => {
@@ -324,6 +329,8 @@
             option.classList.toggle("selected", selected);
             option.setAttribute("aria-pressed", String(selected));
           });
+        styleDropdown.open = false;
+        styleDropdownTrigger.focus();
         drawImage(ctx, canvas.width, frameNumber / FRAME_COUNT);
       });
     });
