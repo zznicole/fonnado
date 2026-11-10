@@ -112,8 +112,12 @@
           </div>
 
           <div class="setting">
-            <span class="setting-label">Animation style</span>
-            <div class="style-list" role="group" aria-label="Animation style">
+            <details class="style-dropdown" id="styleDropdown">
+              <summary class="style-dropdown-trigger" id="styleDropdownTrigger">
+                <span id="styleSelection">Choose an animation style ...</span>
+                <span class="style-dropdown-arrow" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="style-list" role="group" aria-label="Animation style">
               <button
                 type="button"
                 class="style-option selected"
@@ -226,7 +230,8 @@
                 >
                 <span class="check" aria-hidden="true">✓</span>
               </button>
-            </div>
+              </div>
+            </details>
           </div>
 
           <div class="setting setting-inline">
